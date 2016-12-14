@@ -1314,8 +1314,14 @@ function getdata(data) {
 
 function safegetzipfile(zip, file) {
 	var f = file; if(zip.files[f]) return zip.files[f];
-	f = file.toLowerCase(); if(zip.files[f]) return zip.files[f];
-	f = f.replace(/\//g,'\\'); if(zip.files[f]) return zip.files[f];
+
+	var lowerCaseFiles = {};
+	for (var key in zip.files) {
+		lowerCaseFiles[key.toLowerCase()] = zip.files[key];
+	}
+
+	f = file.toLowerCase(); if(lowerCaseFiles[f]) return lowerCaseFiles[f];
+	f = f.replace(/\//g,'\\'); if(lowerCaseFiles[f]) return lowerCaseFiles[f];
 	return null;
 }
 
@@ -7669,7 +7675,7 @@ function write_ws_xml_cols(ws, cols) {
 }
 
 function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
-	if(cell.v === undefined && cell.s === undefined) return "";
+	if(cell.v === undefined && cell.s === undefined && !cell.f) return "";
 	var vv = "";
 	var oldt = cell.t, oldv = cell.v;
 	switch(cell.t) {
@@ -7686,7 +7692,8 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 			break;
 		default: vv = cell.v; break;
 	}
-	var v = writetag('v', escapexml(vv)), o = {r:ref};
+	var o = { r: ref },
+		v = cell.f ? writetag('f', escapexml(cell.f)) : writetag('v', escapexml(vv));
 	/* TODO: cell style */
 	var os = get_cell_style(opts.cellXfs, cell, opts);
 	if(os !== 0) o.s = os;
